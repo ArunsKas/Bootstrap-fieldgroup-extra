@@ -11,3 +11,5 @@ tab from url. Functionality must be enabled in module configuration page.
 ### Remarks
 Module created and tested for Bootstrap tabs only. Need more testing / building
 time to use with nav pills.
+
+Tabs history idea from http://ck.kennt-wayne.de/2012/dec/twitter-bootstrap-how-to-fix-tabs
