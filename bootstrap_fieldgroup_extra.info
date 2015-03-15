@@ -1,0 +1,11 @@
+name = Bootstrap fieldgroup extra features
+description = Adds extra features to fieldgroup formatters for Bootstrap nav: tabs history and tabs ID trasliteration.
+package = Fields
+core = 7.x
+
+dependencies[] = field
+dependencies[] = ctools
+dependencies[] = field_group
+dependencies[] = bootstrap_fieldgroup
+
+configure = admin/config/content/bootstrap_extra

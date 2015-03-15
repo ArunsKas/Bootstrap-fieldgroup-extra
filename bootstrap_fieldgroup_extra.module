@@ -1,0 +1,138 @@
+<?php
+/**
+ * Implements hook_menu().
+ */
+function bootstrap_fieldgroup_extra_menu() {
+  $items['admin/config/content/bootstrap_extra/settings'] = array(
+    'title' => 'Bootstrap extra',
+    'description' => 'Adds extra features to Bootstrap fieldgroup module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bootstrap_fieldgroup_extra_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'bootstrap_fieldgroup_extra.admin.inc',
+    'weight' => 10,
+
+  );
+  return $items;
+}
+
+/**
+ * Implements template_preprocess_bootstrap_tabs().
+ * @param $variables
+ */
+function bootstrap_fieldgroup_extra_preprocess_bootstrap_fieldgroup_nav(&$var) {
+  
+  $variables = $var;
+
+  $group = &$variables['group'];
+  
+  // count initial number of fieldgroups
+  $fieldgroup_count = count($group->children);
+
+  $variables['wrapper_classes'] = $variables['group']->classes;
+  $variables['wrapper_classes'] .= ' bootstrap-nav-wrapper';
+
+  $variables['flip'] = FALSE;
+
+  if ($group->format_settings['instance_settings']['bootstrap_orientation']) {
+    switch ($group->format_settings['instance_settings']['bootstrap_orientation']) {
+      case 1:
+        $variables['wrapper_classes'] .= ' tabs-right';
+        break;
+      case 2:
+        $variables['wrapper_classes'] .= ' tabs-below';
+        $variables['flip'] = TRUE;
+        break;
+      case 3:
+        $variables['wrapper_classes'] .= ' tabs-left';
+        break;
+      default:
+    }
+  }
+
+  $variables['nav_classes'] = $variables['group']->classes;
+
+  switch ($group->format_settings['instance_settings']['bootstrap_nav_type']) {
+    case 'tabs':
+      $variables['nav_classes'] .= ' nav-tabs';
+      break;
+    case 'pills':
+      $variables['nav_classes'] .= ' nav-pills';
+      break;
+    default:
+  }
+
+  if ($group->format_settings['instance_settings']['bootstrap_stacked']) {
+    $variables['nav_classes'] .= ' nav-stacked';
+  }
+
+  $variables['pane_classes'] = $variables['group']->classes;
+
+  uasort($variables['items'], 'element_sort');
+  foreach ($variables['items'] as $key => $item) {
+
+    // Check if item is not empty and we have access to it.
+    if ($item && (!isset($item['#access']) || $item['#access'])) {
+      $id = _other_bootstrap_fieldgroup_label_to_id($item['#title']);
+
+      $variables['navs'][] = array(
+        'content' => l(
+          $item['#title'],
+          NULL,
+          array(
+            'attributes' => array(
+              'data-toggle' => 'tab'
+            ),
+            'fragment' => $id,
+            'external' => TRUE,
+            'html' => TRUE,
+          )
+        ),
+        'classes' => $item['#group']->classes,
+      );
+
+      $variables['panes'][] = array(
+        'id' => $id,
+        'content' => drupal_render($item),
+      );
+    }
+  }
+  
+  // Fix array size.
+  // Slide doubled array. Leave only new values.
+  $panes = $variables['panes'];
+  $panes = array_slice($variables['panes'], $fieldgroup_count);  
+  $variables['panes'] = $panes;
+  
+  $navs = $variables['navs'];
+  $navs = array_slice($variables['navs'], $fieldgroup_count);  
+  $variables['navs'] = $navs;
+  
+
+  // Config?
+  $variables['active'] = 0;
+
+  $variables['is_empty'] = !(count($variables['navs']) && count($variables['panes']));
+  
+  $var = $variables;
+}
+
+/**
+ * Convert a group label to a usable HTML id attribute.
+ */
+function _other_bootstrap_fieldgroup_label_to_id($title) {
+  $id = preg_replace('/\PL/u', '-', drupal_strtolower($title));
+  if (module_exists('transliteration') && variable_get('bootstrap_fieldgroup_transl')) {
+	  return transliteration_get($id);
+  }
+  return $id;
+}
+
+/**
+ * Implements hook_init().
+ */
+function bootstrap_fieldgroup_extra_init() {
+  if (variable_get('bootstrap_fieldgroup_history')) {
+    drupal_add_js(drupal_get_path('module', 'bootstrap_fieldgroup_extra') .'/bootstrap_fieldgroup_extra.js');
+  }
+}
